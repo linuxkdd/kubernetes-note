@@ -1,0 +1,24 @@
+Job主要用于批量处理短暂的一次性任务。
+
+[root@master1 job]# cat job.yaml 
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job
+  namespace: default
+spec:
+  backoffLimit: 4
+  completions: 4
+  parallelism: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: echo
+        image: busybox:1.35.0-glibc
+        imagePullPolicy: IfNotPresent
+        command:
+        - echo
+        - hello,Job
+
+
