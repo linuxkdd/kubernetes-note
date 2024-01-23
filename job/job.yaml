@@ -7,9 +7,9 @@ metadata:
   name: job
   namespace: default
 spec:
-  backoffLimit: 4
-  completions: 4
-  parallelism: 2
+  backoffLimit: 4    #如果失败，失败多少次后不在执行
+  completions: 4     #有多少个Pod执行成功，认为任务是成功的
+  parallelism: 2     #并行执行任务的数量
   template:
     spec:
       restartPolicy: Never
@@ -21,4 +21,23 @@ spec:
         - echo
         - hello,Job
 
+[root@master1 job]# kubectl create -f job.yaml 
+job.batch/job created
 
+[root@master1 job]# kubectl get job
+NAME   COMPLETIONS   DURATION   AGE
+job    0/4           3s         3s
+
+[root@master1 job]# kubectl get po 
+NAME                              READY   STATUS      RESTARTS   AGE
+job-5ndmz                         0/1     Completed   0          5s
+job-d95k8                         0/1     Completed   0          7s
+job-gwr2q                         0/1     Completed   0          18s
+job-h472k                         0/1     Completed   0          18s
+
+[root@master1 job]# kubectl logs -f job-5ndmz 
+hello,Job
+
+[root@master1 job]# kubectl get job
+NAME   COMPLETIONS   DURATION   AGE
+job    4/4           17s        35s
