@@ -1,1 +1,50 @@
-1
+[root@master1 job]# cat cronjob.yaml 
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  concurrencyPolicy: Allow    #并非调度策略：Allow允许同时运行多个任务；Forbid：不允许并发运行，如果之前的任务尚未完成新的任务不会被创建
+  failedJobsHistoryLimit: 1   #保留多少失败的任务
+  schedule: '*/1 * * * * '    #调度周期，和linux一直，分时日月周
+  successfulJobsHistoryLimit: 3  #保留多少已经完成的任务
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox:1.28
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
+
+[root@master1 job]# kubectl create -f cronjob.yaml 
+cronjob.batch/hello created
+
+[root@master1 job]# kubectl get cronjobs.batch 
+NAME    SCHEDULE       SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+hello   */1 * * * *    False     1        0s              4s
+
+[root@master1 job]# kubectl get jobs
+NAME             COMPLETIONS   DURATION   AGE
+hello-28433244   1/1           12s        18s
+
+[root@master1 job]# kubectl get pod
+NAME                              READY   STATUS      RESTARTS   AGE
+hello-28433244-7lmpb              0/1     Completed   0          23s
+
+[root@master1 job]# kubectl get job
+NAME             COMPLETIONS   DURATION   AGE
+hello-28433248   1/1           3s         2m9s
+hello-28433249   1/1           3s         69s
+hello-28433250   1/1           3s         9s
+
+[root@master1 job]# kubectl get po 
+NAME                              READY   STATUS      RESTARTS   AGE
+hello-28433248-njldb              0/1     Completed   0          2m14s
+hello-28433249-49hnp              0/1     Completed   0          74s
+hello-28433250-7rp44              0/1     Completed   0          14s
